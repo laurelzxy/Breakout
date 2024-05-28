@@ -1,4 +1,4 @@
-import { Actor, CollisionType, Color, Text, Engine, vec, Font } from "excalibur"
+import { Actor, CollisionType, Color, Text, Engine, vec, Font, Label, FontUnit, Sound, Loader } from "excalibur"
 
 // 1 - Criar uma instancia de Engine, que representa o jogo
 const game = new Engine({
@@ -87,9 +87,11 @@ const yoffset = 20
 const colunas = 5
 const linhas = 3
 
+const blocos = colunas * linhas
+
 const corBloco = [Color.Red, Color.Orange, Color.Yellow]
 
-const larguraBloco = (game.drawWidth / colunas) - padding - (padding / colunas) ;
+const larguraBloco = (game.drawWidth / colunas) - padding - (padding / colunas);
 // const larguraBloco = 136
 const alturaBloco = 30
 
@@ -97,10 +99,10 @@ const listaBlocos: Actor[] = []
 
 
 // Rederiza cada linha, renderiza 3 linhas
-for(let j = 0; j < linhas; j++){
+for (let j = 0; j < linhas; j++) {
 
 	// Rederização dos bloquinhos, rederiza 5 bloquinhos
-	for(let i = 0; i < colunas; i++) {
+	for (let i = 0; i < colunas; i++) {
 		listaBlocos.push(
 			new Actor({
 				x: xoffset + i * (larguraBloco + padding) + padding,
@@ -114,52 +116,82 @@ for(let j = 0; j < linhas; j++){
 
 }
 
-listaBlocos.forEach( bloco => {
+listaBlocos.forEach(bloco => {
 	bloco.body.collisionType = CollisionType.Active
 	game.add(bloco)
-} )
+})
 
 // Adicionando pontuação
 let pontos = 0
 
-const textoPontos = new Text({
-	text: "Pontos: " + pontos,
-	font: new Font({ size: 30, color: Color.White})
+const textoPontos = new Label({
+	text: pontos.toString(),
+	font: new Font({
+		size: 40,
+		color: Color.White,
+		strokeColor: Color.Black,
+		unit: FontUnit.Px
+	}),
+	pos: vec(600, 500)
 })
 
-const textObject = new Actor ({
-	x: game.drawWidth - 100,
-	y: game.drawHeight - 50
-})
+game.add(textoPontos)
 
-textObject.graphics.use(textoPontos)
- game.add(textObject)
+// const textoPontos = new Text({
+// 	text: "Pontos: " + pontos,
+// 	font: new Font({ size: 30, color: Color.White})
+// })
 
-let colidindo: boolean = false 
+// const textObject = new Actor ({
+// 	x: game.drawWidth - 100,
+// 	y: game.drawHeight - 50
+// })
+
+// textObject.graphics.use(textoPontos)
+//  game.add(textObject)
+
+let colidindo: boolean = false
+
+const sound = new Sound("./music/som.mp3");
+
+const loader = new Loader([sound]);
+
 
 bolinha.on("collisionstart", (event) => {
-	// Verificar se a bolinha colidiu com algum bloco destrutivel
-	console.log("Colidiu com", event.other)
+	if (pontos < blocos) {
+		console.log("Colidiu com", event.other)
 
-	// Se o elemento colidido for um bloco da lista de blocos 
-	if (listaBlocos.includes(event.other)) {
-		event.other.kill()
-	}
+		// Se o elemento colidido for um bloco da lista de blocos 
+		if (listaBlocos.includes(event.other)) {
+			event.other.kill()
 
-	// Rebater a bolinha = inverter as direções
-	let intersecção = event.contact.mtv.normalize()
-	if (!colidindo) {
-		colidindo = true
-		 
-		// Intersecção 
-		if ( Math.abs(intersecção.x) > Math.abs(intersecção.y) ){
-			// bolinha.vel.x = bolinha.vel.x * -1
-			// bolinha.vel.x *= -1
-			bolinha.vel.x = bolinha.vel.x * -1
-		} else {
-			bolinha.vel.y = bolinha.vel.y * -1
+			sound.play();
+
+			pontos++
+
+			textoPontos.text = pontos.toString()
+			console.log(pontos);
 		}
+
+		// Rebater a bolinha = inverter as direções
+		let intersecção = event.contact.mtv.normalize()
+		if (!colidindo) {
+			colidindo = true
+
+			// Intersecção 
+			if (Math.abs(intersecção.x) > Math.abs(intersecção.y)) {
+				// bolinha.vel.x = bolinha.vel.x * -1
+				// bolinha.vel.x *= -1
+				bolinha.vel.x = bolinha.vel.x * -1
+			} else {
+				bolinha.vel.y = bolinha.vel.y * -1
+			}
+		}
+	} else {
+		alert("Terminou")
 	}
+	// Verificar se a bolinha colidiu com algum bloco destrutivel
+
 })
 
 bolinha.on("collisionend", () => {
@@ -168,11 +200,12 @@ bolinha.on("collisionend", () => {
 
 bolinha.on("exitviewport", () => {
 	alert("Foi de BASE")
+
+
+
 	window.location.reload()
 })
 
 
-
-
 // Inicia o game
-game.start()
+game.start(loader)
