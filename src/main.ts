@@ -1,5 +1,8 @@
 import { Actor, CollisionType, Color, Text, Engine, vec, Font, Label, FontUnit, Sound, Loader } from "excalibur"
 
+
+const fundo = new Sound ("./music/Taylor.mp3");
+
 // 1 - Criar uma instancia de Engine, que representa o jogo
 const game = new Engine({
 	width: 800,
@@ -39,6 +42,20 @@ const bolinha = new Actor({
 	color: Color.Red
 })
 
+let coresBolinha = [
+	Color.Black,
+	Color.Chartreuse,
+	Color.Cyan,
+	Color.Green,
+	Color.Magenta,
+	Color.Orange,
+	Color.Red,
+	Color.Rose,
+	Color.White,
+	Color.Yellow,
+]
+
+let numeroCores = coresBolinha.length
 
 // 5 - Criar movimentação da bolinha
 const velocidadeBolinha = vec(700, 700)
@@ -137,6 +154,9 @@ const textoPontos = new Label({
 
 game.add(textoPontos)
 
+const gameOverSong = new Sound ("./music/game.mp3");
+
+
 // const textoPontos = new Text({
 // 	text: "Pontos: " + pontos,
 // 	font: new Font({ size: 30, color: Color.White})
@@ -154,12 +174,16 @@ let colidindo: boolean = false
 
 const sound = new Sound("./music/som.mp3");
 
-const loader = new Loader([sound]);
+const loader = new Loader([sound,gameOverSong,fundo]);
+
+
 
 
 bolinha.on("collisionstart", (event) => {
 	if (pontos < blocos) {
 		console.log("Colidiu com", event.other)
+		
+		
 
 		// Se o elemento colidido for um bloco da lista de blocos 
 		if (listaBlocos.includes(event.other)) {
@@ -169,9 +193,16 @@ bolinha.on("collisionstart", (event) => {
 
 			pontos++
 
+			bolinha.color = event.other.color
+
+			// bolinha.color = coresBolinha [ Math.trunc( Math.random() * numeroCores)]
+
 			textoPontos.text = pontos.toString()
 			console.log(pontos);
+
 		}
+		
+
 
 		// Rebater a bolinha = inverter as direções
 		let intersecção = event.contact.mtv.normalize()
@@ -188,7 +219,8 @@ bolinha.on("collisionstart", (event) => {
 			}
 		}
 	} else {
-		alert("Terminou")
+		alert("PARABÉNS você ganhouu!!!")
+		window.location.reload()
 	}
 	// Verificar se a bolinha colidiu com algum bloco destrutivel
 
@@ -199,13 +231,22 @@ bolinha.on("collisionend", () => {
 })
 
 bolinha.on("exitviewport", () => {
-	alert("Foi de BASE")
+	gameOverSong.play(1)
+	.then(() => {
+		alert("Foi de BASE")
+	
+	
+	
+		window.location.reload()
 
+	})
+})
 
-
-	window.location.reload()
+game.on("start", () => {
+	fundo.play(1)
 })
 
 
+
 // Inicia o game
-game.start(loader)
+await game.start(loader)
